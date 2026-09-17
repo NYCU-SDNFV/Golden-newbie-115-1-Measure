@@ -26,6 +26,9 @@ help:
 	@echo "make plot      CDF (figs/a4_cdf.png) and Pareto (figs/b1_pareto.png)"
 	@echo "make shell     a shell inside the container"
 	@echo "make clean     tear everything down (also cleans stale Mininet state)"
+	@echo "After update: review and merge instructor/update-<tag>, run make test, then push your default branch."
+	@echo "Before update: commit or stash answers, data and figures; never discard them to clear a version warning."
+	@echo "Publishing an instructor release does not automatically change or notify your repository."
 
 build:
 	$(COMPOSE) build

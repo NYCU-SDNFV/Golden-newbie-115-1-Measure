@@ -80,6 +80,17 @@ make clean       # tear down, including stale Mininet / netns state
 
 ### Keep the starter up to date
 
+Run `make help` for the update and resubmission sequence. Commit or stash your
+answers, measured `data/`, and figures before updating; do not delete your work
+just to clear a dirty-tree warning.
+
+Prefer committing and pushing your Classroom default branch from your Linux
+or WSL checkout. `gh student submit` creates a remote snapshot, so verify that
+your local work commits were pushed and fetch/merge any new remote commit
+before continuing locally. The tested native-Windows v1.52.1 CLI can lose
+executable modes while snapshotting; a normal Linux/WSL Git push preserves the
+committed modes and history.
+
 Install Python 3 on your host as well as Git, Make and Docker. `make test` first
 checks the public template's latest release. A required update stops the command;
 an optional one prints a notice. Network or metadata failures are explicit errors,
