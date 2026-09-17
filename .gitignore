@@ -1,0 +1,21 @@
+# --- Lab 2 ---
+# Your measurements ARE part of the submission: data/*.json, data/*.txt, data/*.csv
+# and figs/*.png must be committed. Only raw junk is ignored here.
+__pycache__/
+*.pyc
+*.log
+.env
+data/*.iperf
+data/*.ping
+
+# --- from Golden-Base ---
+*.pcap
+*.tmp
+.DS_Store
+.venv/
+node_modules/
+*.pem
+id_rsa*
+*.solution.*
+result.json
+release-body.md
