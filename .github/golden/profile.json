@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "name": "Measure",
+  "lab": 2,
+  "assignment": "lab2-measure",
+  "checks": 12,
+  "environment": "measurement"
+}

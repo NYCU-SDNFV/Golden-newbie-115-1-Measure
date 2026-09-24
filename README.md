@@ -59,6 +59,13 @@ Same container as Lab 0, one difference: **this lab needs the OVS kernel datapat
 explains why). Lab 0 check 6 printed a `DATAPATH-PROBE` line for your machine; if it
 said `kernel_dp=yes` you are fine.
 
+Before starting, run the non-scoring `make pretest`. If it reports a
+host prerequisite, follow the [course environment preparation guide](.github/golden/README.md)
+on the machine that actually runs the Docker Engine. The pretest uses isolated
+privileged probes and does not change host sysctl policy or your answers.
+Probes can trigger normal Linux module autoload; use an authorized dedicated lab
+VM, not a shared production Docker host.
+
 - **Windows: work inside WSL 2**, never Git Bash or PowerShell (they rewrite paths and
   have no `make`). Docker Desktop + WSL 2 has been verified to run every check here.
 - **Linux:** any distribution whose kernel ships the `openvswitch` module (all
@@ -69,6 +76,7 @@ said `kernel_dp=yes` you are fine.
   report's environment line.
 
 ```bash
+make pretest     # diagnose the Docker engine host; this does not award points
 make up          # build + start the `lab2` container (compose file is given in full)
 make test        # policy + every autograded check, exactly what CI runs
 make a1 a2 a3    # run one exercise at a time while you work on it

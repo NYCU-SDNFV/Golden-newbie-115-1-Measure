@@ -8,10 +8,11 @@ CONTAINER ?= lab2
 DEXEC      = docker exec $(CONTAINER)
 IN         = /workspace
 
-.PHONY: help build up down shell logs clean policy lab-test test test-offline \
+.PHONY: help pretest build up down shell logs clean policy lab-test test test-offline \
         check-update update a1 a2 a3 a4 b1 b2 labels plot
 
 help:
+	@echo "make pretest   diagnose the Docker engine host (non-scoring)"
 	@echo "make up        build the image and start the '$(CONTAINER)' container"
 	@echo "make test      policy checks + all autograded checks (same as CI)"
 	@echo "make check-update  check the required public starter version"
@@ -33,16 +34,13 @@ help:
 build:
 	$(COMPOSE) build
 
-# Socket-buffer ceilings live in the host kernel's root network namespace (see
-# docker-compose.yml). Lift them through PID 1; harmless if already high enough.
-CEILING = 67108864
+pretest:
+	@python3 -B .github/golden/pretest.py
+
 up:
 	$(COMPOSE) up -d --build
 	@echo "waiting for $(CONTAINER) to be ready ..."
 	@sh tests/wait_ready.sh
-	@$(DEXEC) nsenter -t 1 -n -- sysctl -qw net.core.rmem_max=$(CEILING) net.core.wmem_max=$(CEILING) \
-	   && echo "socket-buffer ceilings lifted to $(CEILING) bytes" \
-	   || echo "warning: could not lift net.core.{r,w}mem_max (A2/B2 -w above ~200K will fail); on a Linux host: sudo sysctl -w net.core.rmem_max=$(CEILING) net.core.wmem_max=$(CEILING)"
 
 down:
 	-$(COMPOSE) down --remove-orphans

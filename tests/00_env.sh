@@ -39,7 +39,7 @@ if [ "${WMAX:-0}" -ge 8388608 ]; then
   pass "socket-buffer ceiling net.core.wmem_max=$WMAX (iperf3 -w up to that value works)"
 else
   die "net.core.wmem_max=$WMAX is too low for A2/B2 (iperf3 -w above ~200K fails)" \
-      "make up lifts it via nsenter; if that failed, on a Linux host run: sudo sysctl -w net.core.rmem_max=67108864 net.core.wmem_max=67108864"
+      "run make pretest on the machine running the Docker Engine, then follow .github/golden/README.md; make up never changes host settings"
 fi
 
 CC=$(dexec sysctl -n net.ipv4.tcp_available_congestion_control 2>/dev/null)

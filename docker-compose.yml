@@ -5,16 +5,12 @@
 #     and qdiscs, and A3 needs the OVS *kernel* datapath, which only works when the
 #     container can talk to the host kernel's openvswitch module.
 #   * the container is named `lab2`; every `make` target and every test uses it.
-#   * `pid: host` lets `make up` reach the host kernel's root network namespace
-#     (through PID 1) to lift net.core.{r,w}mem_max, the socket-buffer ceilings that
-#     A2 and B2 need and that cannot be changed from inside a namespace.
 services:
   lab2:
     build: .
     container_name: lab2
     hostname: lab2
     privileged: true
-    pid: host
     # mnexec closes every descriptor up to RLIMIT_NOFILE when it creates a host.
     ulimits:
       nofile:

@@ -44,10 +44,11 @@ def mn_clean():
 # bytes by default) and iperf3 aborts with "socket buffer size not set correctly"
 # when its -w request is clamped. These two sysctls belong to the *host* kernel's
 # root network namespace: they cannot be changed from inside the container or a
-# Mininet host, only read. `make up` lifts them on the host (see the Makefile);
-# here we only check, so that A2/B2 fail with a clear message instead of a cryptic
-# iperf3 error. Without the lift, the ceiling -- not your window -- would be the
-# hidden variable. This is exactly the kind of knob A2-5 asks you to name.
+# Mininet host, only read. Host preparation is an explicit administrator action;
+# `make pretest` diagnoses it and links the shared guide. Here we only check, so
+# that A2/B2 fail with a clear message instead of a cryptic iperf3 error. Without
+# preparation, the ceiling -- not your window -- would be the hidden variable.
+# This is exactly the kind of knob A2-5 asks you to name.
 SOCKET_CEILING = 8 * 1024 * 1024
 
 
@@ -64,8 +65,9 @@ def start(net):
            if not sysctl(h, k).isdigit() or int(sysctl(h, k)) < SOCKET_CEILING]
     if low:
         print('warning: %s below %d on this host -> iperf3 -w above ~200K will fail. '
-              '`make up` lifts the ceiling; on a bare Linux host: sudo sysctl -w net.core.rmem_max=%d net.core.wmem_max=%d'
-              % (', '.join(low), SOCKET_CEILING, SOCKET_CEILING * 8, SOCKET_CEILING * 8))
+              'run `make pretest` on the Docker Engine host and follow '
+              '.github/golden/README.md'
+              % (', '.join(low), SOCKET_CEILING))
     return net
 
 
