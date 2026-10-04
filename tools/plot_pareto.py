@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportMissingImports=false
 """B1: scatter your settings as goodput vs P99 RTT and mark the dominated ones.
 
 Usage:
@@ -10,16 +11,27 @@ The program only draws and flags dominated points. Which points should exist, ho
 read the SLO, and why you would pick one setting over another is what your report
 has to defend.
 """
+from __future__ import annotations
+
 import argparse
 import csv
 import os
+from collections.abc import Sequence
+from typing import TypedDict
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def dominated(pt, others):
+class Point(TypedDict):
+    label: str
+    goodput: float
+    p50: float
+    p99: float
+
+
+def dominated(pt: Point, others: Sequence[Point]) -> bool:
     """Higher goodput and lower p99 are better. If another point is at least as good in both
     dimensions and strictly better in one, this point is dominated."""
     g, p = pt["goodput"], pt["p99"]
@@ -31,7 +43,7 @@ def dominated(pt, others):
     return False
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("csv")
     ap.add_argument("-o", "--out", default="figs/b1_pareto.png")
@@ -39,7 +51,7 @@ def main():
     ap.add_argument("--slo-p99", type=float, default=None, help="P99 RTT ceiling (ms)")
     args = ap.parse_args()
 
-    pts = []
+    pts: list[Point] = []
     with open(args.csv) as f:
         for row in csv.DictReader(f):
             if not row.get("label") or row["label"].startswith("#"):

@@ -105,6 +105,24 @@ an optional one prints a notice. Network or metadata failures are explicit error
 not proof that your checkout is current. Use `make check-update` to retry.
 `make up` does not contact the release server.
 
+The Python harness and plotting helpers include parameter and return annotations.
+Mininet 2.3 itself does not publish typing metadata, so `typings/mininet/` supplies
+only the small API surface this lab uses; `pyrightconfig.json` lets Pylance and
+Pyright find it without installing Mininet on your host. `labkit.get_node()` also
+checks and narrows named hosts and switches instead of leaving `net.get()` as
+`Unknown`.
+The stubs preserve binary subprocess output and optional command/address
+results. `labkit.cmd()` and `labkit.host_ip()` check these boundaries instead
+of promising text that Mininet did not return. Empty student collections also
+retain their element types. Instructor CI checks the actual generated starter,
+rejects intentionally wrong contracts, and tests the stubs against the pinned
+Mininet runtime; these non-scoring checks do not require students to install
+additional packages.
+Collection declarations are kept separate from editable answer assignments so
+the normal three-way updater can preserve completed work. The unfinished
+`gbps_per_cpu()` placeholder retains its existing `None` sentinel, reflected
+in its annotation; its caller already reports this as unfinished.
+
 Updates are **manual**: publication does not open update PRs or modify accepted
 student repositories. Your protected `.lab-release.json` selects the public
 Measurement template for your channel; do not change it to switch assignments.

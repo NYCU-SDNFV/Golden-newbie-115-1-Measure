@@ -9,14 +9,17 @@ Rules of the environment:
   * with controller=None the switch must be failMode="standalone", or it forwards nothing
   * if a previous run died half-way: `make clean` (runs `mn -c` inside the container)
 """
+from __future__ import annotations
+
 import labkit
 from mininet.net import Mininet
+from mininet.node import Host, OVSSwitch
 from mininet.topo import Topo
 from mininet.link import TCLink
 
 
 class T(Topo):
-    def build(self):
+    def build(self) -> None:
         h1 = self.addHost("h1", ip="10.0.0.1/24")
         h2 = self.addHost("h2", ip="10.0.0.2/24")
         s1 = self.addSwitch("s1")
@@ -41,7 +44,7 @@ CLIENT_OPTS = ""          # <-- e.g. "-t ?? -O ??"
 GOODPUT_IS = ""           # <-- "sender" or "receiver"
 
 
-def main():
+def main() -> None:
     if GOODPUT_IS not in ("sender", "receiver"):
         labkit.unimplemented("A1-3 GOODPUT_IS")
     if not CLIENT_OPTS.strip():
@@ -51,7 +54,9 @@ def main():
                   controller=None, waitConnected=False)
     labkit.start(net)
     try:
-        h1, h2, s1 = net.get("h1", "h2", "s1")
+        h1 = labkit.get_node(net, "h1", Host)
+        h2 = labkit.get_node(net, "h2", Host)
+        s1 = labkit.get_node(net, "s1", OVSSwitch)
 
         # For your report: what did TCLink actually hang on the interface?
         # (You need this to break down the gap between line rate and goodput.)
@@ -61,17 +66,17 @@ def main():
         print("parsed: rate=%s Mbit  one-way delay=%s ms" % (tc["rate_mbit"], tc["delay_ms"]))
 
         srv = labkit.start_iperf_server(h1)
-        r = labkit.iperf_client(h2, h1.IP(), CLIENT_OPTS, server_proc=srv)
+        r = labkit.iperf_client(h2, labkit.host_ip(h1), CLIENT_OPTS, server_proc=srv)
         print("IPERF3 sender   : %.2f Mbits/sec  (retransmits=%s)" % (r["sender_mbps"], r["retransmits"]))
         print("IPERF3 receiver : %.2f Mbits/sec" % r["receiver_mbps"])
 
         # TODO(A1-4): measure RTT with ping (at least 5 samples). The report must give the
         #   formula relating the RTT you measure to the delay you configured.
         PING_COUNT = 5
-        p = labkit.ping(h2, h1.IP(), count=PING_COUNT)
+        p = labkit.ping(h2, labkit.host_ip(h1), count=PING_COUNT)
         print(p["raw"])
 
-        goodput = r[GOODPUT_IS + "_mbps"]
+        goodput = r["sender_mbps"] if GOODPUT_IS == "sender" else r["receiver_mbps"]
         print("GOODPUT (%s): %.2f Mbits/sec" % (GOODPUT_IS, goodput))
 
         labkit.write_json("a1", {
@@ -83,7 +88,7 @@ def main():
             "goodput_is": GOODPUT_IS,
             "goodput_mbps": goodput,
             "rtt_ms": {k: p.get(k) for k in ("min", "avg", "max", "mdev", "samples")},
-            "link_stats_h2": h2.cmd("ip -s link show h2-eth0").replace("\r", "").strip(),
+            "link_stats_h2": labkit.cmd(h2, "ip -s link show h2-eth0").replace("\r", "").strip(),
         })
     finally:
         net.stop()

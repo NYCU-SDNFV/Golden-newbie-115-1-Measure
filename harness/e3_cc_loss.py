@@ -15,10 +15,16 @@ program only provides the loop.
 Write down in the report which hypothesis each experiment tests, what result
 would falsify it, and what you actually saw.
 """
+from __future__ import annotations
+
 import labkit
 from mininet.net import Mininet
+from mininet.node import Host
 from mininet.topo import Topo
 from mininet.link import TCLink
+
+CC_LIST: list[str]
+WINDOWS: list[str]
 
 # TODO(B2-1): design a path with high RTT AND random loss.
 #   RTT has to be large for congestion control to matter; start with 1 % loss.
@@ -43,7 +49,7 @@ IPERF_SECS = 8
 
 
 class T(Topo):
-    def build(self):
+    def build(self) -> None:
         h1 = self.addHost("h1", ip="10.0.0.1/24")
         h2 = self.addHost("h2", ip="10.0.0.2/24")
         s1 = self.addSwitch("s1")
@@ -51,8 +57,8 @@ class T(Topo):
         self.addLink(h2, s1, bw=100, delay=LINK_DELAY, loss=LOSS_PCT)
 
 
-def set_cc(h, cc):
-    h.cmd("sysctl -qw net.ipv4.tcp_congestion_control=%s" % cc)
+def set_cc(h: Host, cc: str) -> str:
+    labkit.cmd(h, "sysctl -qw net.ipv4.tcp_congestion_control=%s" % cc)
     got = labkit.sysctl(h, "net.ipv4.tcp_congestion_control")
     if got != cc:
         raise SystemExit("could not set congestion control to %s (kernel says %s) -- "
@@ -60,12 +66,12 @@ def set_cc(h, cc):
     return got
 
 
-def run_once(h1, h2, opts):
+def run_once(h1: Host, h2: Host, opts: str) -> labkit.IperfResult:
     srv = labkit.start_iperf_server(h1)
-    return labkit.iperf_client(h2, h1.IP(), "-t %d -O 2 %s" % (IPERF_SECS, opts), server_proc=srv)
+    return labkit.iperf_client(h2, labkit.host_ip(h1), "-t %d -O 2 %s" % (IPERF_SECS, opts), server_proc=srv)
 
 
-def main():
+def main() -> None:
     if "?" in LINK_DELAY or LOSS_PCT is None:
         labkit.unimplemented("B2-1 LINK_DELAY / LOSS_PCT")
     if len(CC_LIST) < 2:
@@ -78,11 +84,12 @@ def main():
                   controller=None, waitConnected=False)
     labkit.start(net)
     try:
-        h1, h2 = net.get("h1", "h2")
+        h1 = labkit.get_node(net, "h1", Host)
+        h2 = labkit.get_node(net, "h2", Host)
         avail = labkit.sysctl(h2, "net.ipv4.tcp_available_congestion_control").split()
         print("AVAILABLE_CC:", " ".join(avail))
-        labkit.ping(h2, h1.IP(), count=2)            # warm-up (ARP)
-        p = labkit.ping(h2, h1.IP(), count=5)
+        labkit.ping(h2, labkit.host_ip(h1), count=2)            # warm-up (ARP)
+        p = labkit.ping(h2, labkit.host_ip(h1), count=5)
         print("RTT:", p["raw"].splitlines()[-1])
         tc = labkit.read_tc(h2, "h2-eth0")
         print("LINK h2-eth0: rate=%s Mbit delay=%s ms loss=%s %%" % (tc["rate_mbit"], tc["delay_ms"], tc["loss_pct"]))

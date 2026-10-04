@@ -6,17 +6,30 @@ Usage:  python3 tools/collect_pareto.py            (run automatically by `make b
 One row per label: label, leaf_qdisc, goodput_mbps, p50_ms, p90_ms, p99_ms, idle_rtt_ms.
 The numbers are copied verbatim from your own runs -- nothing is computed here.
 """
+from __future__ import annotations
+
 import csv
 import glob
 import json
 import os
+from typing import TypedDict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "..", "data")
 
 
-def main():
-    rows = []
+class ParetoRow(TypedDict):
+    label: str
+    leaf_qdisc: str
+    goodput_mbps: float | None
+    p50_ms: float | None
+    p90_ms: float | None
+    p99_ms: float | None
+    idle_rtt_ms: float | None
+
+
+def main() -> None:
+    rows: list[ParetoRow] = []
     for path in sorted(glob.glob(os.path.join(DATA, "e5_*.json"))):
         with open(path) as f:
             j = json.load(f)

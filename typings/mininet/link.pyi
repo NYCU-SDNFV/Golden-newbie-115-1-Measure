@@ -1,0 +1,2 @@
+class TCLink:
+    pass

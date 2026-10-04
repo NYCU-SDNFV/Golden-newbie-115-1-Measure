@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportMissingImports=false
 """Plot the RTT CDF. Given in full -- plotting is not what this lab grades.
 
 Usage:
@@ -7,17 +8,20 @@ Usage:
 Input:  one RTT sample (ms) per line, as written by harness/e5_aqm.sh.
 Output: the CDF figure, plus p50/p90/p99 on stdout (the numbers for your B1 table).
 """
+from __future__ import annotations
+
 import argparse
 import os
 import sys
+from collections.abc import Sequence
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def load(path):
-    vals = []
+def load(path: str) -> list[float]:
+    vals: list[float] = []
     with open(path) as f:
         for line in f:
             line = line.strip().rstrip(",")
@@ -33,14 +37,14 @@ def load(path):
     return sorted(vals)
 
 
-def pct(sorted_vals, q):
+def pct(sorted_vals: Sequence[float], q: float) -> float:
     if not sorted_vals:
         return float("nan")
     idx = min(len(sorted_vals) - 1, max(0, int(round(q / 100.0 * len(sorted_vals))) - 1))
     return sorted_vals[idx]
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("csv", nargs="+")
     ap.add_argument("-o", "--out", default="figs/cdf.png")

@@ -1,0 +1,17 @@
+{
+  "include": [
+    "harness",
+    "tools"
+  ],
+  "exclude": [
+    "tools/student-build"
+  ],
+  "extraPaths": [
+    "harness"
+  ],
+  "stubPath": "typings",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Linux",
+  "typeCheckingMode": "basic",
+  "reportMissingModuleSource": "none"
+}
