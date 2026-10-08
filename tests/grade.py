@@ -296,6 +296,86 @@ def grade_b2():
                       'if the enlarged window reaches the model-based result, the window hypothesis is not ruled out')
 
 
+# Check R reads only these tables: the FIRST table under each heading whose first
+# header cell matches. Other tables, bullets and prose anywhere are never parsed.
+REPORT_TABLES = (
+    # (section, first header cell, minimum complete rows)
+    ('A1', 'metric', 3),
+    ('A2', 'window', 3),
+    ('A3', 'setting', 2),
+    ('B1', 'label', 3),
+    ('B2', 'experiment', 2),
+)
+AI_USAGE_EXAMPLE = '| 1 | no AI used | none | - | - |'
+
+
+def md_cells(line):
+    """Cells of one markdown table row; HTML comments are ignored."""
+    line = re.sub(r'<!--.*?-->', '', line).strip()
+    if not line.startswith('|'):
+        return None
+    return [c.strip() for c in line.strip('|').split('|')]
+
+
+def is_separator(cells):
+    return bool(cells) and all(re.fullmatch(r':?-+:?', c) for c in cells)
+
+
+def md_tables(text):
+    """Yield (header cells, data rows) for every markdown table in text."""
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        head = md_cells(lines[i])
+        sep = md_cells(lines[i + 1]) if i + 1 < len(lines) else None
+        if head and sep and is_separator(sep):
+            rows = []
+            i += 2
+            while i < len(lines):
+                row = md_cells(lines[i])
+                if row is None:
+                    break
+                rows.append(row)
+                i += 1
+            yield head, rows
+            continue
+        i += 1
+
+
+def section(text, heading):
+    m = re.search(r'^## %s\b.*$' % re.escape(heading), text, re.M)
+    if not m:
+        return None
+    rest = text[m.end():]
+    nxt = re.search(r'^## ', rest, re.M)
+    return rest[:nxt.start()] if nxt else rest
+
+
+def grade_report_table(text, heading, first_header, minimum):
+    body = section(text, heading)
+    if body is None:
+        return  # the missing heading is already reported
+    table = next(((h, r) for h, r in md_tables(body) if h[0].lower() == first_header), None)
+    where = 'the "%s | ..." table under "## %s"' % (first_header, heading)
+    if not check(table is not None, 'report: %s is present' % where,
+                 'keep the template table (its first header cell is "%s"); only that table is graded'
+                 % first_header):
+        return
+    header, rows = table
+    rows = [r for r in rows if any(r)]                       # completely empty rows are ignored
+    bad = [i for i, r in enumerate(rows, 1) if len(r) != len(header) or not all(r)]
+    if bad:
+        hint = ('row(s) %s of that table have an empty cell or a different number of columns; '
+                'every row you keep needs text in all %d columns (write n/a if a value does not '
+                'apply) -- or delete the row' % (', '.join(map(str, bad)), len(header)))
+    else:
+        hint = 'that table needs at least %d rows with text in all %d columns' % (minimum, len(header))
+    check(len(rows) >= minimum and not bad,
+          'report: %s is filled in (%d complete row(s), at least %d needed)'
+          % (where, len(rows) - len(bad), minimum),
+          hint + '. Only this table is graded here; your other tables and text are not parsed')
+
+
 def grade_report():
     rep = os.path.join(ROOT, 'report', 'REPORT.md')
     if not check(os.path.exists(rep), 'report/REPORT.md exists'):
@@ -304,23 +384,20 @@ def grade_report():
     for h in ('A1', 'A2', 'A3', 'A4', 'B1', 'B2'):
         check(re.search(r'^## %s\b' % h, txt, re.M) is not None, 'section "## %s" present' % h, 'keep the template headings')
     check('<student id>' not in txt, 'title line filled in (no "<student id>" placeholder)')
-    lines = txt.splitlines()
-    is_sep = lambda l: re.match(r'^\|[\s\-|:]*\|$', l) is not None
-    filled = [l for i, l in enumerate(lines)
-              if l.startswith('|') and not is_sep(l)
-              and not (i + 1 < len(lines) and is_sep(lines[i + 1]))          # not a header row
-              and re.search(r'\|\s*[^|\s][^|]*\|\s*[^|\s]', l)]           # >= 2 non-empty cells
-    check(len(filled) >= 8, 'tables are filled in (%d rows with content)' % len(filled), 'the autograder cannot read an empty table')
+    for heading, first_header, minimum in REPORT_TABLES:
+        grade_report_table(txt, heading, first_header, minimum)
     for fig in ('figs/a4_cdf.png', 'figs/b1_pareto.png'):
         p = os.path.join(ROOT, fig)
         check(os.path.exists(p) and os.path.getsize(p) > 1000, '%s exists' % fig, 'make plot')
         check(os.path.basename(fig) in txt, '%s is referenced in the report' % fig)
     ai = os.path.join(ROOT, 'report', 'ai-usage.md')
     if check(os.path.exists(ai), 'report/ai-usage.md exists'):
-        rows = [l for l in open(ai, encoding='utf-8', errors='replace').read().splitlines()
-                if re.match(r'^\|\s*\d+\s*\|\s*\S', l)]
-        check(len(rows) >= 1, 'AI usage log has at least one filled row (%d)' % len(rows),
-              'if you used no AI at all, write one row saying so')
+        ai_text = open(ai, encoding='utf-8', errors='replace').read()
+        log = next((r for h, r in md_tables(ai_text) if h[0] == '#'), None)
+        rows = [r for r in (log or []) if r and re.fullmatch(r'\d+', r[0]) and len(r) >= 5 and all(r[:5])]
+        check(len(rows) >= 1, 'AI usage log has at least one complete row (%d)' % len(rows),
+              'fill all five columns of at least one numbered row in the "| # | what I asked | ..." table; '
+              'if you used no AI at all, write: ' + AI_USAGE_EXAMPLE)
 
 
 GRADERS = {'a1': grade_a1, 'a2': grade_a2, 'a3': grade_a3, 'a4': grade_a4,

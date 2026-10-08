@@ -294,6 +294,28 @@ report is checked against them. Also upload `report/REPORT.md` as a PDF on E3.
 Your last push before the deadline is what counts. Commit as you work (the git check
 wants at least three commits of your own), not one dump at the end.
 
+### What check R (report, 3 points) looks at
+
+The rules below are the whole check; nothing else in your report is parsed. The TA
+reads the content itself.
+
+- `report/REPORT.md`, `report/ai-usage.md`, both figures and `data/a1.json`,
+  `data/a3.json`, `data/pareto.csv` are committed.
+- `report/REPORT.md` keeps the six headings `## A1` ... `## B2`, and its title line no
+  longer contains `<student id>`.
+- Under each of `## A1`, `## A2`, `## A3`, `## B1` and `## B2`, the grader reads **only
+  the first table whose first header cell is** `metric`, `window`, `setting`, `label`
+  and `experiment` respectively (the template tables). Every row you keep needs text in
+  every column (write `n/a` if a value does not apply); completely empty rows are
+  ignored. Minimum complete rows: A1 3, A2 3, A3 2, B1 3, B2 2.
+- Extra tables, lists and prose anywhere else are never parsed, so they cannot break
+  the check. Words such as `TODO` are not searched for.
+- `figs/a4_cdf.png` and `figs/b1_pareto.png` exist (more than 1 kB) and their file names
+  appear in the report.
+- `report/ai-usage.md`: at least one numbered row of the `| # | what I asked | ...` table
+  has text in all five columns. If you used no AI at all, write
+  `| 1 | no AI used | none | - | - |`.
+
 ### Trying a newer starter without losing your work
 
 Lab 2 uses the `lab2-measure` assignment: staging is on `newbie-115-1`, and the

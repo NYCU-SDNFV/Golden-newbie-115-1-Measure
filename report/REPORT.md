@@ -5,6 +5,9 @@ Environment: host OS / Docker flavour (Docker Desktop + WSL 2, Linux, ...), host
 
 > The TAs re-run your harness. Every number below must be traceable to a file in
 > `data/`. Keep the section headings exactly as they are: the autograder looks for them.
+> The autograder reads only the first table under A1, A2, A3, B1 and B2 (the tables below,
+> found by their first header cell). Every row you keep needs text in every column; write
+> `n/a` if a value does not apply. Your own extra tables are welcome and are not parsed.
 > Submit this same report as a PDF on E3 as well.
 
 ---
